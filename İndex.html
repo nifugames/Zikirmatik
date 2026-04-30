@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Zikirmatik- Nifuteam</title>
+    <style>
+        :root {
+            --bg-color: #0f172a;
+            --accent-color: #38bdf8;
+            --glass-bg: rgba(255, 255, 255, 0.05);
+            --text-color: #f8fafc;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            overflow: hidden;
+        }
+
+        .container {
+            width: 90%;
+            max-width: 400px;
+            background: var(--glass-bg);
+            backdrop-filter: blur(15px);
+            border-radius: 30px;
+            padding: 2rem;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            text-align: center;
+        }
+
+        h1 {
+            font-size: 1.2rem;
+            letter-spacing: 2px;
+            color: var(--accent-color);
+            margin-bottom: 2rem;
+            text-transform: uppercase;
+        }
+
+        /* Zikirmatik Alanı */
+        .zikir-display {
+            font-size: 5rem;
+            font-weight: 800;
+            margin: 1rem 0;
+            text-shadow: 0 0 20px var(--accent-color);
+        }
+
+        .main-btn {
+            width: 150px;
+            height: 150px;
+            border-radius: 50%;
+            border: none;
+            background: linear-gradient(145deg, #38bdf8, #0ea5e9);
+            box-shadow: 0 10px 30px rgba(14, 165, 233, 0.4);
+            cursor: pointer;
+            transition: transform 0.1s;
+            margin: 1.5rem 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .main-btn:active {
+            transform: scale(0.92);
+        }
+
+        /* Pusula Tasarımı */
+        .compass-container {
+            position: relative;
+            width: 120px;
+            height: 120px;
+            margin: 2rem auto;
+            border: 2px solid var(--accent-color);
+            border-radius: 50%;
+            transition: transform 0.5s ease-out;
+        }
+
+        .needle {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 4px;
+            height: 80%;
+            background: linear-gradient(to bottom, #ef4444 50%, #f8fafc 50%);
+            transform: translate(-50%, -50%);
+            border-radius: 2px;
+        }
+
+        .compass-label {
+            position: absolute;
+            width: 100%;
+            top: -25px;
+            font-weight: bold;
+            color: var(--accent-color);
+        }
+
+        /* Kontroller */
+        .controls {
+            display: flex;
+            justify-content: space-around;
+            margin-top: 1.5rem;
+        }
+
+        button.tool-btn {
+            background: rgba(255, 255, 255, 0.1);
+            border: none;
+            color: white;
+            padding: 10px 15px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 0.8rem;
+        }
+
+        button.tool-btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .footer {
+            margin-top: 2rem;
+            font-size: 0.7rem;
+            opacity: 0.5;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h1>ZikirMatik NifuGames v1.0</h1>
+
+        <!-- Zikirmatik -->
+        <div class="zikir-display" id="counter">0</div>
+        <button class="main-btn" onclick="increment()"></button>
+        
+        <!-- Pusula Bölümü -->
+        <div class="compass-container" id="compass">
+            <div class="compass-label">N</div>
+            <div class="needle"></div>
+        </div>
+
+        <div class="controls">
+            <button class="tool-btn" onclick="resetCounter()">Sıfırla</button>
+            <button class="tool-btn" onclick="toggleVibration()">Titreşim: <span id="vibrateStatus">Açık</span></button>
+            <button class="tool-btn" onclick="askCompassPermission()">Pusula Aktif Et</button>
+        </div>
+
+        <div class="footer">
+            Developed by NifuTeam
+        </div>
+    </div>
+
+    <script>
+        let count = 0;
+        let vibrationActive = true;
+
+        function increment() {
+            count++;
+            document.getElementById('counter').innerText = count;
+            
+            // Her 33'te titreşim uyarısı
+            if (vibrationActive && count % 33 === 0) {
+                if (navigator.vibrate) navigator.vibrate([100, 50, 100]);
+            } else if (vibrationActive) {
+                if (navigator.vibrate) navigator.vibrate(20);
+            }
+        }
+
+        function resetCounter() {
+            if (confirm("Sıfırlamak istediğine emin misin knk?")) {
+                count = 0;
+                document.getElementById('counter').innerText = count;
+            }
+        }
+
+        function toggleVibration() {
+            vibrationActive = !vibrationActive;
+            document.getElementById('vibrateStatus').innerText = vibrationActive ? "Açık" : "Kapalı";
+        }
+
+        // Pusula Mantığı
+        function askCompassPermission() {
+            // iOS cihazlarda izin gerekir
+            if (typeof DeviceOrientationEvent.requestPermission === 'function') {
+                DeviceOrientationEvent.requestPermission()
+                    .then(permissionState => {
+                        if (permissionState === 'granted') {
+                            window.addEventListener('deviceorientation', handleOrientation);
+                        }
+                    })
+                    .catch(console.error);
+            } else {
+                // Diğer cihazlar
+                window.addEventListener('deviceorientation', handleOrientation);
+            }
+        }
+
+        function handleOrientation(event) {
+            let heading = event.webkitCompassHeading || (360 - event.alpha);
+            if (heading) {
+                document.getElementById('compass').style.transform = `rotate(${-heading}deg)`;
+            }
+        }
+
+        // Tasarruflu mod - Ekranın kapanmasını engellemek için küçük bir hile denenebilir (opsiyonel)
+    </script>
+</body>
+</html>
